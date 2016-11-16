@@ -1,5 +1,4 @@
 var _           = require('lodash');
-var async       = require('async');
 var pg          = require('pg');
 
 function PostgresDB (opts) {
