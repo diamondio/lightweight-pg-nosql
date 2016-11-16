@@ -30,15 +30,6 @@ describe('Simple Tests', function () {
     db._afterInitialization(done);
   });
 
-  it('Insert an object', function (done) {
-    var db = new PostgresDB(testConfiguration);
-    var objectId = uuid.v4();
-    db.upsertObject('testTable', objectId, {key: 'value'}, function (err) {
-      assert.equal(err, null);
-      done();
-    });
-  });
-
   it('Insert and retrieve object', function (done) {
     var db = new PostgresDB(testConfiguration);
     var objectId = uuid.v4();
@@ -101,6 +92,22 @@ describe('Simple Tests', function () {
         assert.equal(err, null);
         assert.deepEqual(result, ob);
         done();
+      });
+    });
+  });
+
+  it('Remove an object', function (done) {
+    var db = new PostgresDB(testConfiguration);
+    var objectId = uuid.v4();
+    db.upsertObject('testTable6', objectId, {key: 'value'}, function (err) {
+      assert.equal(err, null);
+      db.removeObject('testTable6', objectId, function (err) {
+        assert.equal(err, null);
+        db.getObject('testTable6', objectId, function (err, result) {
+          assert.equal(err, null);
+          assert.equal(result, null);
+          done();
+        });
       });
     });
   });

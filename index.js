@@ -190,6 +190,13 @@ PostgresDB.prototype.getObject = function (tableName, id, cb) {
   });
 }
 
+PostgresDB.prototype.removeObject = function (tableName, id, cb) {
+  var self = this;
+  self._afterInitialization(function () {
+    self._db.query(`DELETE FROM ${tableName} WHERE "postgresId" = $1`, [id], cb);
+  });
+}
+
 
 module.exports = PostgresDB;
 
