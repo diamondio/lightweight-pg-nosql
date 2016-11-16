@@ -191,12 +191,5 @@ PostgresDB.prototype.getObject = function (tableName, id, cb) {
 }
 
 
-
-
 module.exports = PostgresDB;
-
-
-
-
-
 

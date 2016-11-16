@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "GITREPOHERE"
+    "url": "https://github.com/diamondio/lightweight-pg-nosql"
   },
   "keywords": [
     "sql",
@@ -19,6 +19,7 @@
   "author": "Diamond Inc",
   "license": "ISC",
   "dependencies": {
+    "node-uuid": "^1.4.7",
     "pg": "^6.1.0"
   }
 }
