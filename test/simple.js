@@ -96,6 +96,30 @@ describe('Simple Tests', function () {
     });
   });
 
+  it('Upsert several types with new object', function (done) {
+    var db = new PostgresDB(testConfiguration);
+    var objectId = uuid.v4();
+
+    var ob = {
+      Key: {
+        somethingDeep: 'bloop',
+      },
+      num: 12,
+      othernum: '12',
+      alist: [1, 2, 3, '4']
+    }
+
+    db.upsertObject('testTable5', objectId, ob, function (err) {
+      assert.equal(err, null);
+      db = new PostgresDB(testConfiguration);
+      db.getObject('testTable5', objectId, function (err, result) {
+        assert.equal(err, null);
+        assert.deepEqual(result, ob);
+        done();
+      });
+    });
+  });
+
   it('Remove an object', function (done) {
     var db = new PostgresDB(testConfiguration);
     var objectId = uuid.v4();

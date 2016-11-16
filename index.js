@@ -51,13 +51,13 @@ PostgresDB.prototype._initialize = function (retries) {
     self._db = new pg.Pool(self._pgConnectionConfig);
     var db = self._db;
 
-    db.query(`CREATE TABLE IF NOT EXISTS NoSQLPostgresTypeMapping (tableName TEXT, columnName TEXT, type TEXT);`, function (err) {
+    db.query(`CREATE TABLE IF NOT EXISTS NoSQLPostgresTypeMapping ("tableName" TEXT, "columnName" TEXT, "type" TEXT);`, function (err) {
       if (err) throw new Error(`Error while initializing PostgresDB ${err}`);
       db.query(`SELECT * FROM NoSQLPostgresTypeMapping`, function (err, results) {
         if (err) throw new Error(`Error while initializing PostgresDB ${err}`);
         results.rows.forEach(function (row) {
           _.set(self._typeMapping, [row.tableName, row.columnName], row.type);
-        })
+        });
 
         self._initialized = true;
         self._initialization_callbacks.forEach(function(fn) {
@@ -76,7 +76,7 @@ PostgresDB.prototype._prepTable = function (tableName, cb) {
   self._db.query(`CREATE TABLE IF NOT EXISTS ${tableName} ("postgresId" TEXT);
     CREATE UNIQUE INDEX IF NOT EXISTS ${tableName}Index ON ${tableName} ("postgresId");`, function (err) {
     if (err) return cb(err);
-    self._db.query(`INSERT INTO NoSQLPostgresTypeMapping (tableName, columnName, type) VALUES ($1, $2, $3)`, [tableName, 'postgresId', 'string'], function (err) {
+    self._db.query(`INSERT INTO NoSQLPostgresTypeMapping ("tableName", "columnName", "type") VALUES ($1, $2, $3)`, [tableName, 'postgresId', 'string'], function (err) {
       if (err) return cb(err);
       self._typeMapping[tableName] = {postgresId: 'string'};
       cb();
@@ -121,7 +121,7 @@ var typeMap = {
 PostgresDB.prototype._prepColumn = function (tableName, colName, type, cb) {
   var self = this;
   self._db.query(`ALTER TABLE ${tableName} ADD COLUMN "${colName}" ${typeMap[type]}`, function (err) {
-    self._db.query(`INSERT INTO NoSQLPostgresTypeMapping (tableName, columnName, type) VALUES ($1, $2, $3)`, [tableName, colName, type], function (err) {
+    self._db.query(`INSERT INTO NoSQLPostgresTypeMapping ("tableName", "columnName", "type") VALUES ($1, $2, $3)`, [tableName, colName, type], function (err) {
       if (err) return cb(err);
       self._typeMapping[tableName][colName] = type;
       cb();
