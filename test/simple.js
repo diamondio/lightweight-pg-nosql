@@ -109,10 +109,10 @@ describe('Simple Tests', function () {
       alist: [1, 2, 3, '4']
     }
 
-    db.upsertObject('testTable5', objectId, ob, function (err) {
+    db.upsertObject('testTable7', objectId, ob, function (err) {
       assert.equal(err, null);
       db = new PostgresDB(testConfiguration);
-      db.getObject('testTable5', objectId, function (err, result) {
+      db.getObject('testTable7', objectId, function (err, result) {
         assert.equal(err, null);
         assert.deepEqual(result, ob);
         done();

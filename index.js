@@ -180,6 +180,7 @@ PostgresDB.prototype.getObject = function (tableName, id, cb) {
   if (!tableName) return setImmediate(function () { cb('tableName undefined') });
   var self = this;
   self._afterInitialization(function () {
+    if (!self._typeMapping[tableName]) return setImmediate(function () { cb('unknown tableName') });
     self._db.query(`SELECT * FROM ${tableName} WHERE "postgresId" = $1`, [id], function (err, results) {
       if (err) return cb(err);
       var result = results.rows[0];
