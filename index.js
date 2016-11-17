@@ -119,6 +119,7 @@ var typeMap = {
 }
 
 PostgresDB.prototype._prepColumn = function (tableName, colName, type, cb) {
+  if (!tableName) return setImmediate(function () { cb('tableName undefined') });
   var self = this;
   self._db.query(`ALTER TABLE ${tableName} ADD COLUMN "${colName}" ${typeMap[type]}`, function (err) {
     self._db.query(`INSERT INTO NoSQLPostgresTypeMapping ("tableName", "columnName", "type") VALUES ($1, $2, $3)`, [tableName, colName, type], function (err) {
@@ -130,6 +131,7 @@ PostgresDB.prototype._prepColumn = function (tableName, colName, type, cb) {
 }
 
 PostgresDB.prototype._prepareForTableAndObject = function (tableName, object, cb) {
+  if (!tableName) return setImmediate(function () { cb('tableName undefined') });
   var self = this;
   self._prepTable(tableName, function (err) {
     if (err) return cb(err);
@@ -148,6 +150,7 @@ PostgresDB.prototype._afterInitialization = function (cb) {
 
 
 PostgresDB.prototype.upsertObject = function (tableName, id, object, cb) {
+  if (!tableName) return setImmediate(function () { cb('tableName undefined') });
   var self = this;
   self._afterInitialization(function () {
     self._prepareForTableAndObject(tableName, object, function (err) {
@@ -174,6 +177,7 @@ PostgresDB.prototype.upsertObject = function (tableName, id, object, cb) {
 }
 
 PostgresDB.prototype.getObject = function (tableName, id, cb) {
+  if (!tableName) return setImmediate(function () { cb('tableName undefined') });
   var self = this;
   self._afterInitialization(function () {
     self._db.query(`SELECT * FROM ${tableName} WHERE "postgresId" = $1`, [id], function (err, results) {
@@ -191,6 +195,7 @@ PostgresDB.prototype.getObject = function (tableName, id, cb) {
 }
 
 PostgresDB.prototype.removeObject = function (tableName, id, cb) {
+  if (!tableName) return setImmediate(function () { cb('tableName undefined') });
   var self = this;
   self._afterInitialization(function () {
     self._db.query(`DELETE FROM ${tableName} WHERE "postgresId" = $1`, [id], cb);
