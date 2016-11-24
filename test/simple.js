@@ -1,5 +1,5 @@
 var assert  = require('assert');
-var uuid    = require('node-uuid')
+var uuid    = require('uuid')
 var pg      = require('pg');
 var PostgresDB = require('../');
 
