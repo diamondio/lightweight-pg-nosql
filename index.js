@@ -56,9 +56,9 @@ PostgresDB.prototype._initialize = function (retries) {
       db.query(`SELECT * FROM NoSQLPostgresTypeMapping`, function (err, results) {
         if (err) throw new Error(`Error while initializing PostgresDB ${err}`);
         results.rows.forEach(function (row) {
-          _.set(self._typeMapping, [row.tableName, row.columnName], row.type);
+          if (!self._typeMapping[row.tableName]) self._typeMapping[row.tableName] = {postgresId: 'string'};
+          self._typeMapping[row.tableName][row.columnName] = row.type;
         });
-
         self._initialized = true;
         self._initialization_callbacks.forEach(function(fn) {
           fn();
@@ -75,10 +75,9 @@ PostgresDB.prototype._prepTable = function (tableName, cb) {
 
   self._db.query(`CREATE TABLE IF NOT EXISTS ${tableName} ("postgresId" TEXT);
     CREATE UNIQUE INDEX IF NOT EXISTS ${tableName}Index ON ${tableName} ("postgresId");`, function (err) {
-    if (err) return cb(err);
-    self._db.query(`INSERT INTO NoSQLPostgresTypeMapping ("tableName", "columnName", "type") VALUES ($1, $2, $3)`, [tableName, 'postgresId', 'string'], function (err) {
+    self._db.query(`INSERT INTO NoSQLPostgresTypeMapping ("tableName", "columnName", "type") VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, [tableName, 'postgresId', 'string'], function (err) {
       if (err) return cb(err);
-      self._typeMapping[tableName] = {postgresId: 'string'};
+      if (!self._typeMapping[tableName]) self._typeMapping[tableName] = {postgresId: 'string'};
       cb();
     });
   });
@@ -122,8 +121,9 @@ PostgresDB.prototype._prepColumn = function (tableName, colName, type, cb) {
   if (!tableName) return setImmediate(function () { cb('tableName undefined') });
   var self = this;
   self._db.query(`ALTER TABLE ${tableName} ADD COLUMN "${colName}" ${typeMap[type]}`, function (err) {
-    self._db.query(`INSERT INTO NoSQLPostgresTypeMapping ("tableName", "columnName", "type") VALUES ($1, $2, $3)`, [tableName, colName, type], function (err) {
+    self._db.query(`INSERT INTO NoSQLPostgresTypeMapping ("tableName", "columnName", "type") VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`, [tableName, colName, type], function (err) {
       if (err) return cb(err);
+      if (!self._typeMapping[tableName]) self._typeMapping[tableName] = {postgresId: 'string'};
       self._typeMapping[tableName][colName] = type;
       cb();
     });
