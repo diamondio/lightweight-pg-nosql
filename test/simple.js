@@ -43,6 +43,19 @@ describe('Simple Tests', function () {
     });
   });
 
+  it('Insert and the empty object', function (done) {
+    var db = new PostgresDB(testConfiguration);
+    var objectId = uuid.v4();
+    db.upsertObject('testTable20', objectId, {}, function (err) {
+      assert.equal(err, null);
+      db.getObject('testTable20', objectId, function (err, result) {
+        assert.equal(err, null);
+        assert.deepEqual(result, {});
+        done();
+      })
+    });
+  });
+
   it('Insert and retrieve object with capitalized keys', function (done) {
     var db = new PostgresDB(testConfiguration);
     var objectId = uuid.v4();

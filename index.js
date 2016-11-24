@@ -156,6 +156,9 @@ PostgresDB.prototype.upsertObject = function (tableName, id, object, cb) {
     self._prepareForTableAndObject(tableName, object, function (err) {
       if (err) return cb(err);
       var keys = Object.keys(object);
+      if (keys.length === 0) {
+        return self._db.query(`INSERT INTO ${tableName} ("postgresId") VALUES ($1) ON CONFLICT DO NOTHING`, [id], cb);
+      }
       var d = 0;
       var dollar = function () {
         d++;
