@@ -193,7 +193,7 @@ PostgresDB.prototype.getObject = function (tableName, id, cb, shouldFailOnUnknow
   self._afterInitialization(function () {
     if (!self._typeMapping[tableName]) {
       if (shouldFailOnUnknownTable) return setImmediate(function () { cb('unknown tableName') });
-      self._loadTypeMappings(function (err) {
+      self._loadTypeMapping(function (err) {
         if (err) return cb(err);
         return setImmediate(function () {
           self.getObject(tableName, id, cb, true);
