@@ -1,6 +1,6 @@
 {
   "name": "lightweight-pg-nosql",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Simple no-sql built on top of postgres",
   "main": "index.js",
   "scripts": {
