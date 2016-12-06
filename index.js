@@ -39,7 +39,22 @@ var CreateDB = function (config, cb) {
   })
 }
 
-PostgresDB.prototype._initialize = function (retries) {
+PostgresDB.prototype._loadTypeMapping = function (cb) {
+  var self = this;
+  self._db.query(`CREATE TABLE IF NOT EXISTS NoSQLPostgresTypeMapping ("tableName" TEXT, "columnName" TEXT, "type" TEXT);`, function (err) {
+    if (err) return cb({ message: `Error while initializing PostgresDB ${err}`, details: err });
+    self._db.query(`SELECT * FROM NoSQLPostgresTypeMapping`, function (err, results) {
+      if (err) return cb({ message: `Error while initializing PostgresDB ${err}`, details: err });
+      results.rows.forEach(function (row) {
+        if (!self._typeMapping[row.tableName]) self._typeMapping[row.tableName] = {postgresId: 'string'};
+        self._typeMapping[row.tableName][row.columnName] = row.type;
+      });
+      cb();
+    });
+  });
+};
+
+PostgresDB.prototype._initialize = function () {
   var self = this;
 
   var createDatabase = function (cb) {
@@ -51,20 +66,13 @@ PostgresDB.prototype._initialize = function (retries) {
     self._db = new pg.Pool(self._pgConnectionConfig);
     var db = self._db;
 
-    db.query(`CREATE TABLE IF NOT EXISTS NoSQLPostgresTypeMapping ("tableName" TEXT, "columnName" TEXT, "type" TEXT);`, function (err) {
-      if (err) throw new Error(`Error while initializing PostgresDB ${err}`);
-      db.query(`SELECT * FROM NoSQLPostgresTypeMapping`, function (err, results) {
-        if (err) throw new Error(`Error while initializing PostgresDB ${err}`);
-        results.rows.forEach(function (row) {
-          if (!self._typeMapping[row.tableName]) self._typeMapping[row.tableName] = {postgresId: 'string'};
-          self._typeMapping[row.tableName][row.columnName] = row.type;
-        });
-        self._initialized = true;
-        self._initialization_callbacks.forEach(function(fn) {
-          fn();
-        });
-        delete self._initialization_callbacks;
-      })
+    self._loadTypeMapping(function (err) {
+      if (err) throw new Error(err);
+      self._initialized = true;
+      self._initialization_callbacks.forEach(function(fn) {
+        fn();
+      });
+      delete self._initialization_callbacks;
     });
   });
 }
@@ -179,11 +187,19 @@ PostgresDB.prototype.upsertObject = function (tableName, id, object, cb) {
   });
 }
 
-PostgresDB.prototype.getObject = function (tableName, id, cb) {
+PostgresDB.prototype.getObject = function (tableName, id, cb, shouldFailOnUnknownTable) {
   if (!tableName) return setImmediate(function () { cb('tableName undefined') });
   var self = this;
   self._afterInitialization(function () {
-    if (!self._typeMapping[tableName]) return setImmediate(function () { cb('unknown tableName') });
+    if (!self._typeMapping[tableName]) {
+      if (shouldFailOnUnknownTable) return setImmediate(function () { cb('unknown tableName') });
+      self._loadTypeMappings(function (err) {
+        if (err) return cb(err);
+        return setImmediate(function () {
+          self.getObject(tableName, id, cb, true);
+        });
+      });
+    }
     self._db.query(`SELECT * FROM ${tableName} WHERE "postgresId" = $1`, [id], function (err, results) {
       if (err) return cb(err);
       var result = results.rows[0];
