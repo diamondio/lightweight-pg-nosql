@@ -187,12 +187,12 @@ PostgresDB.prototype.upsertObject = function (tableName, id, object, cb) {
   });
 }
 
-PostgresDB.prototype.getObject = function (tableName, id, cb, shouldFailOnUnknownTable) {
+PostgresDB.prototype.getObject = function (tableName, id, cb, shouldFailOnUnknownMapping) {
   if (!tableName) return setImmediate(function () { cb('tableName undefined') });
   var self = this;
   self._afterInitialization(function () {
     if (!self._typeMapping[tableName]) {
-      if (shouldFailOnUnknownTable) return setImmediate(function () { cb('unknown tableName') });
+      if (shouldFailOnUnknownMapping) return setImmediate(function () { cb('unknown tableName') });
       self._loadTypeMapping(function (err) {
         if (err) return cb(err);
         return setImmediate(function () {
@@ -205,6 +205,11 @@ PostgresDB.prototype.getObject = function (tableName, id, cb, shouldFailOnUnknow
       var result = results.rows[0];
       if (!result) return cb(null, null);
       var finalResult = {};
+      if (_.some(Object.keys(result).map(key => self._typeMapping[tableName][key]), x => x === undefined)) {
+        return setImmediate(function () {
+          self.getObject(tableName, id, cb, true);
+        });
+      }
       Object.keys(result).forEach(function (key) {
         if (key === 'postgresId') return;
         finalResult[key] = reconstructType(result[key], self._typeMapping[tableName][key]);
