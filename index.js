@@ -67,7 +67,10 @@ PostgresDB.prototype._initialize = function () {
     var db = self._db;
 
     self._loadTypeMapping(function (err) {
-      if (err) throw new Error(err);
+      if (err) {
+        console.error('Error loading lightweight-pg-nosql type mapping %s', JSON.stringify(err));
+        throw new Error(err);
+      }
       self._initialized = true;
       self._initialization_callbacks.forEach(function(fn) {
         fn();
